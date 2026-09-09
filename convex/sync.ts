@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 
+import { attachUnlinkedPosts } from '../shared/attachPosts';
 import { cardIdsIn, compactChanges, countChanges } from '../shared/changes';
 import { internal } from './_generated/api';
 import { action, internalMutation, internalQuery } from './_generated/server';
@@ -28,8 +29,12 @@ type BlogInfo = { id: string; title: string; body: string; date: number };
 const BLOG_BODY_LIMIT = 8000;
 const BLOG_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 
-async function fetchLinkedBlogs(cubeId: string, oldestNeeded: number): Promise<Map<string, BlogInfo>> {
-  const out = new Map<string, BlogInfo>();
+async function fetchBlogs(
+  cubeId: string,
+  oldestNeeded: number,
+): Promise<{ linked: Map<string, BlogInfo>; unlinked: Array<BlogInfo & { changelist?: string }> }> {
+  const linked = new Map<string, BlogInfo>();
+  const unlinked: Array<BlogInfo & { changelist?: string }> = [];
   let lastKey: unknown = null;
   for (let page = 0; page < 200; page++) {
     let res: { items?: RawBlog[]; lastKey?: unknown };
@@ -40,20 +45,22 @@ async function fetchLinkedBlogs(cubeId: string, oldestNeeded: number): Promise<M
     }
     const items = res.items ?? [];
     for (const b of items) {
-      if (!b.id || !b.changelist) continue;
-      out.set(b.changelist, {
+      if (!b.id) continue;
+      const info: BlogInfo = {
         id: b.id,
         title: (b.title ?? '').trim(),
         body: (b.body ?? '').slice(0, BLOG_BODY_LIMIT),
         date: typeof b.date === 'number' ? b.date : 0,
-      });
+      };
+      if (b.changelist) linked.set(b.changelist, info);
+      else unlinked.push(info);
     }
     const oldest = items.reduce((m, b) => Math.min(m, typeof b.date === 'number' ? b.date : m), Infinity);
     lastKey = res.lastKey ?? null;
     if (!lastKey || !items.length || oldest < oldestNeeded - BLOG_LOOKBACK_MS) break;
     await sleep(PAGE_DELAY_MS);
   }
-  return out;
+  return { linked, unlinked };
 }
 
 export const knownChangelogIds = internalQuery({
@@ -232,7 +239,9 @@ export const syncCube = action({
     }
 
     const oldestFresh = fresh.reduce((m, p) => Math.min(m, p.date), Infinity);
-    const blogs = fresh.length ? await fetchLinkedBlogs(cubeId, oldestFresh) : new Map<string, BlogInfo>();
+    const blogs = fresh.length
+      ? await fetchBlogs(cubeId, oldestFresh)
+      : { linked: new Map<string, BlogInfo>(), unlinked: [] as Array<BlogInfo & { changelist?: string }> };
 
     const compacted = fresh.map((p) => {
       const changes = compactChanges(p.changelog);
@@ -244,9 +253,17 @@ export const syncCube = action({
         cubeVersion: typeof version === 'number' ? version : undefined,
         changes,
         counts: countChanges(changes),
-        blog: blogs.get(p.id),
+        blog: blogs.linked.get(p.id),
       };
     });
+
+    // Posts written on their own (no changelist) still describe the changes made
+    // around them, so pin each one to the nearest entry from the same day.
+    const attached = attachUnlinkedPosts(compacted, blogs.unlinked);
+    for (const entry of compacted) {
+      const idx = attached.get(entry.changelogId);
+      if (idx !== undefined) entry.blog = blogs.unlinked[idx];
+    }
 
     for (let i = 0; i < compacted.length; i += ENTRY_BATCH) {
       await ctx.runMutation(internal.sync.upsertEntries, { entries: compacted.slice(i, i + ENTRY_BATCH) });
