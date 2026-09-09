@@ -15,6 +15,7 @@ export default defineSchema({
     fullySynced: v.boolean(),
     hideNonCardChanges: v.boolean(),
     netOut: v.boolean(),
+    hideMaybeboard: v.optional(v.boolean()),
     autoSquash: v.optional(v.boolean()),
     autoSquashWindowMs: v.optional(v.number()),
     noAutoSquash: v.optional(v.array(v.string())),

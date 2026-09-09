@@ -30,6 +30,7 @@ export const updateSettings = mutation({
     cubeId: v.string(),
     hideNonCardChanges: v.optional(v.boolean()),
     netOut: v.optional(v.boolean()),
+    hideMaybeboard: v.optional(v.boolean()),
     autoSquash: v.optional(v.boolean()),
     autoSquashWindowMs: v.optional(v.number()),
   },
@@ -42,6 +43,7 @@ export const updateSettings = mutation({
     const patch: Record<string, boolean | number> = {};
     if (settings.hideNonCardChanges !== undefined) patch.hideNonCardChanges = settings.hideNonCardChanges;
     if (settings.netOut !== undefined) patch.netOut = settings.netOut;
+    if (settings.hideMaybeboard !== undefined) patch.hideMaybeboard = settings.hideMaybeboard;
     if (settings.autoSquash !== undefined) patch.autoSquash = settings.autoSquash;
     if (settings.autoSquashWindowMs !== undefined) patch.autoSquashWindowMs = settings.autoSquashWindowMs;
     await ctx.db.patch(cube._id, patch);

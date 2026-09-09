@@ -85,6 +85,7 @@ export default function CubePage() {
 
   const hideEdits = cube?.hideNonCardChanges ?? true;
   const netOut = cube?.netOut ?? true;
+  const hideMaybeboard = cube?.hideMaybeboard ?? true;
   const autoOn = cube?.autoSquash ?? true;
   const autoWindow = cube?.autoSquashWindowMs ?? DEFAULT_AUTO_WINDOW_MS;
 
@@ -95,12 +96,14 @@ export default function CubePage() {
     for (const s of squashes ?? []) for (const eid of s.entryIds) inSquash.set(eid, s);
     const seen = new Set<string>();
     const opts = { netOut, hideEdits };
+    const visibleBoards = (changes: CompactChanges): CompactChanges =>
+      hideMaybeboard
+        ? Object.fromEntries(Object.entries(changes).filter(([board]) => board.toLowerCase() !== 'maybeboard'))
+        : changes;
     const build = (group: Entry[], squash?: Doc<'squashes'>): Item => {
       const sorted = [...group].sort((a, b) => a.date - b.date);
-      const changes = mergeChanges(
-        sorted.map((e) => e.changes as CompactChanges),
-        opts,
-      );
+      const boards = sorted.map((e) => visibleBoards(e.changes as CompactChanges));
+      const changes = mergeChanges(boards, opts);
       return {
         key: squash ? `s:${squash._id}` : `e:${sorted[0].changelogId}`,
         kind: squash ? 'squash' : 'entry',
@@ -110,7 +113,7 @@ export default function CubePage() {
         title: squash?.title,
         changes,
         counts: countChanges(changes),
-        rawEdits: sorted.reduce((n, e) => n + e.counts.edits, 0),
+        rawEdits: boards.reduce((n, c) => n + countChanges(c).edits, 0),
       };
     };
     const out: Item[] = [];
@@ -126,7 +129,7 @@ export default function CubePage() {
       }
     }
     return out;
-  }, [entries, squashes, hideEdits, netOut]);
+  }, [entries, squashes, hideEdits, netOut, hideMaybeboard]);
 
   const visible = useMemo(() => items.filter((it) => Object.keys(it.changes).length > 0), [items]);
   const hiddenCount = items.length - visible.length;
@@ -304,6 +307,12 @@ export default function CubePage() {
               hint="Drop tag, status, finish, and printing edits"
             />
             <Toggle
+              checked={hideMaybeboard}
+              onChange={(v) => updateSettings({ cubeId: cube.cubeId, hideMaybeboard: v })}
+              label="Ignore maybeboard"
+              hint="Leave maybeboard changes out of the timeline"
+            />
+            <Toggle
               checked={netOut}
               onChange={(v) => updateSettings({ cubeId: cube.cubeId, netOut: v })}
               label="Net out squashed changes"
@@ -403,7 +412,7 @@ export default function CubePage() {
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-semibold">
             Changes ({visible.length}
-            {hiddenCount > 0 && <span className="text-text-secondary font-normal text-sm"> · {hiddenCount} edit-only hidden</span>})
+            {hiddenCount > 0 && <span className="text-text-secondary font-normal text-sm"> · {hiddenCount} hidden</span>})
           </h2>
         </div>
 

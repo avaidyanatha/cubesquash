@@ -102,7 +102,7 @@ export const upsertCube = internalMutation({
     if (existing) {
       await ctx.db.patch(existing._id, doc);
     } else {
-      await ctx.db.insert('cubes', { ...doc, hideNonCardChanges: true, netOut: true });
+      await ctx.db.insert('cubes', { ...doc, hideNonCardChanges: true, netOut: true, hideMaybeboard: true });
     }
   },
 });
