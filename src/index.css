@@ -97,6 +97,7 @@
   --color-change-swap: rgb(var(--change-swap));
   --color-change-edit: rgb(var(--change-edit));
   --font-mono: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: 'Montserrat', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
 }
 
 html,

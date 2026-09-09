@@ -4,6 +4,7 @@ import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { api } from '../../convex/_generated/api';
+import { SquashMark } from '../components/Logo';
 import { Button, Card, CardBody, Spinner } from '../components/ui';
 import { parseCubeInput, relativeTime } from '../lib/format';
 
@@ -37,7 +38,7 @@ export default function HomePage() {
       <Card className="overflow-hidden">
         <div className="bg-hero-bg text-white px-6 py-8 sm:px-10 sm:py-12">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="" className="h-16 w-16 hidden sm:block" />
+            <SquashMark size={64} className="hidden sm:block shrink-0" />
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold">Squash your Cube Cobra changelog</h1>
               <p className="mt-1 text-white/80 max-w-2xl">
