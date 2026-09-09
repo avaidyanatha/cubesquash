@@ -15,6 +15,9 @@ export default defineSchema({
     fullySynced: v.boolean(),
     hideNonCardChanges: v.boolean(),
     netOut: v.boolean(),
+    autoSquash: v.optional(v.boolean()),
+    autoSquashWindowMs: v.optional(v.number()),
+    noAutoSquash: v.optional(v.array(v.string())),
   })
     .index('by_shortId', ['shortId'])
     .index('by_cubeId', ['cubeId']),
@@ -26,6 +29,7 @@ export default defineSchema({
     cubeVersion: v.optional(v.number()),
     changes: v.any(),
     counts: v.object({ adds: v.number(), removes: v.number(), swaps: v.number(), edits: v.number() }),
+    blog: v.optional(v.object({ id: v.string(), title: v.string(), body: v.string(), date: v.number() })),
   })
     .index('by_cube_date', ['cubeId', 'date'])
     .index('by_changelogId', ['changelogId']),
@@ -45,5 +49,6 @@ export default defineSchema({
     cubeId: v.string(),
     entryIds: v.array(v.string()),
     title: v.optional(v.string()),
+    auto: v.optional(v.boolean()),
   }).index('by_cube', ['cubeId']),
 });

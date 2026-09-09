@@ -16,6 +16,7 @@ export const byCube = query({
       cubeVersion: e.cubeVersion,
       changes: e.changes,
       counts: e.counts,
+      blog: e.blog,
     }));
   },
 });

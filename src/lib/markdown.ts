@@ -6,8 +6,9 @@ export type CardNames = Record<string, { name: string } | undefined>;
 
 export const nameOf = (names: CardNames, cardID: string): string => names[cardID]?.name ?? 'Unknown card';
 
-export function changesToMarkdown(title: string, changes: CompactChanges, names: CardNames): string {
+export function changesToMarkdown(title: string, changes: CompactChanges, names: CardNames, body?: string): string {
   const lines: string[] = [`## ${title}`];
+  if (body?.trim()) lines.push('', body.trim());
   for (const [board, b] of Object.entries(changes)) {
     const plus = b.adds.length + b.swaps.length;
     const minus = b.removes.length + b.swaps.length;

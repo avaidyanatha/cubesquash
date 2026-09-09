@@ -1,16 +1,9 @@
-import {
-  CheckIcon,
-  ChecklistIcon,
-  CopyIcon,
-  FoldIcon,
-  LinkExternalIcon,
-  SyncIcon,
-  XIcon,
-} from '@primer/octicons-react';
+import { CheckIcon, ChecklistIcon, CopyIcon, FoldIcon, LinkExternalIcon, SyncIcon, XIcon } from '@primer/octicons-react';
 import { useAction, useMutation, useQuery } from 'convex/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { DEFAULT_AUTO_WINDOW_MS } from '../../shared/autosquash';
 import { cardIdsIn, type CompactChanges, countChanges } from '../../shared/changes';
 import { api } from '../../convex/_generated/api';
 import type { Doc } from '../../convex/_generated/dataModel';
@@ -28,11 +21,16 @@ const AUTO_WINDOWS = [
   { label: '7 days', ms: 7 * DAY },
 ];
 
+const itemBlog = (item: Item) => [...item.entries].reverse().find((e) => e.blog)?.blog;
+
 const itemTitle = (item: Item): string => {
   const first = item.entries[0];
   const last = item.entries[item.entries.length - 1];
-  return item.title || formatDateRange(first.date, last.date);
+  return item.title || itemBlog(item)?.title || formatDateRange(first.date, last.date);
 };
+
+const itemMarkdown = (item: Item, cards: CardInfoMap) =>
+  changesToMarkdown(itemTitle(item), item.changes, cards, itemBlog(item)?.body);
 
 export default function CubePage() {
   const { id = '' } = useParams();
@@ -59,6 +57,7 @@ export default function CubePage() {
   const removeSquash = useMutation(api.squashes.remove);
   const removeAllSquashes = useMutation(api.squashes.removeAll);
   const renameSquash = useMutation(api.squashes.rename);
+  const autoSquashNow = useMutation(api.squashes.autoSquash);
 
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -85,6 +84,8 @@ export default function CubePage() {
 
   const hideEdits = cube?.hideNonCardChanges ?? true;
   const netOut = cube?.netOut ?? false;
+  const autoOn = cube?.autoSquash ?? true;
+  const autoWindow = cube?.autoSquashWindowMs ?? DEFAULT_AUTO_WINDOW_MS;
 
   const items = useMemo<Item[]>(() => {
     if (!entries) return [];
@@ -104,6 +105,7 @@ export default function CubePage() {
         kind: squash ? 'squash' : 'entry',
         entries: sorted,
         squashId: squash?._id,
+        auto: squash?.auto,
         title: squash?.title,
         changes,
         counts: countChanges(changes),
@@ -132,7 +134,6 @@ export default function CubePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const lastClick = useRef<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [autoWindow, setAutoWindow] = useState(AUTO_WINDOWS[0].ms);
   const [busy, setBusy] = useState(false);
 
   const exitSelect = () => {
@@ -186,38 +187,15 @@ export default function CubePage() {
     }
   };
 
-  const doAutoSquash = async () => {
+  const setAutoSquash = async (on: boolean, windowMs = autoWindow) => {
     if (!cubeId) return;
-    const groups: Item[][] = [];
-    let current: Item[] = [];
-    for (const it of items) {
-      const prev = current[current.length - 1];
-      if (prev && prev.entries[0].date - it.entries[it.entries.length - 1].date <= autoWindow) {
-        current.push(it);
-      } else {
-        if (current.length > 1) groups.push(current);
-        current = [it];
-      }
-    }
-    if (current.length > 1) groups.push(current);
-    const actionable = groups.filter((g) => g.some((it) => it.kind === 'entry'));
-    if (actionable.length === 0) {
-      alert('Nothing to auto-squash with that window.');
-      return;
-    }
-    if (!confirm(`Create ${actionable.length} squash${actionable.length === 1 ? '' : 'es'} from entries within ${AUTO_WINDOWS.find((w) => w.ms === autoWindow)?.label}?`)) {
+    if (!on) {
+      await updateSettings({ cubeId, autoSquash: false });
       return;
     }
     setBusy(true);
     try {
-      for (const g of actionable) {
-        await createSquash({
-          cubeId,
-          entryIds: g.flatMap((it) => it.entries.map((e) => e.changelogId)),
-          replaceIds: g.flatMap((it) => (it.squashId ? [it.squashId] : [])),
-          title: g.find((it) => it.title)?.title,
-        });
-      }
+      await autoSquashNow({ cubeId, windowMs });
     } finally {
       setBusy(false);
     }
@@ -356,12 +334,19 @@ export default function CubePage() {
                   <Button color="accent" onClick={() => setSelecting(true)} disabled={visible.length < 2}>
                     <ChecklistIcon size={14} /> Select to squash
                   </Button>
-                  <div className="flex items-center rounded border border-border overflow-hidden">
+                  <div className="flex items-center gap-2">
+                    <Toggle
+                      checked={autoOn}
+                      onChange={(v) => setAutoSquash(v)}
+                      label="Auto-squash"
+                      hint="Fold nearby entries into one update, anchored on blog posts"
+                    />
                     <select
                       value={autoWindow}
-                      onChange={(e) => setAutoWindow(Number(e.target.value))}
-                      className="bg-bg text-text text-sm px-2 py-1 focus:outline-none"
-                      title="Group entries that happened within this window"
+                      onChange={(e) => setAutoSquash(true, Number(e.target.value))}
+                      disabled={!autoOn || busy}
+                      className="rounded border border-border bg-bg text-text text-sm px-2 py-1 focus:outline-none disabled:opacity-50"
+                      title="Entries closer together than this get folded"
                     >
                       {AUTO_WINDOWS.map((w) => (
                         <option key={w.ms} value={w.ms}>
@@ -369,22 +354,24 @@ export default function CubePage() {
                         </option>
                       ))}
                     </select>
-                    <Button
-                      color="primary"
-                      outline
-                      onClick={doAutoSquash}
-                      disabled={busy || items.length < 2}
-                      className="rounded-none border-0 border-l border-l-border"
-                    >
-                      <FoldIcon size={14} /> Auto-squash
-                    </Button>
+                    {autoOn && (
+                      <Button
+                        color="primary"
+                        outline
+                        onClick={() => setAutoSquash(true)}
+                        disabled={busy || items.length < 2}
+                        title="Run auto-squash again now"
+                      >
+                        <FoldIcon size={14} /> Run
+                      </Button>
+                    )}
                   </div>
                   {squashCount > 0 && (
                     <Button
                       color="danger"
                       outline
                       onClick={() => {
-                        if (confirm('Remove every squash for this cube? The original entries are kept.')) {
+                        if (confirm('Remove every squash for this cube and turn off auto-squash? The original entries are kept.')) {
                           removeAllSquashes({ cubeId: cube.cubeId });
                         }
                       }}
@@ -399,7 +386,7 @@ export default function CubePage() {
                     onClick={() =>
                       copy(
                         '__all__',
-                        visible.map((it) => changesToMarkdown(itemTitle(it), it.changes, cards)).join('\n\n'),
+                        visible.map((it) => itemMarkdown(it, cards)).join('\n\n'),
                       )
                     }
                     title="Copy the whole visible timeline as Markdown"
@@ -448,7 +435,7 @@ export default function CubePage() {
                   onToggleSelect={(shift) => toggleSelect(item.key, shift)}
                   onUnsquash={() => item.squashId && removeSquash({ id: item.squashId })}
                   onRename={(title) => item.squashId && renameSquash({ id: item.squashId, title })}
-                  onCopy={() => copy(item.key, changesToMarkdown(itemTitle(item), item.changes, cards))}
+                  onCopy={() => copy(item.key, itemMarkdown(item, cards))}
                   copied={copiedKey === item.key}
                 />
               </li>

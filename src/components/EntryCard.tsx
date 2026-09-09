@@ -1,4 +1,5 @@
 import {
+  BookIcon,
   CheckIcon,
   CopyIcon,
   EyeIcon,
@@ -18,12 +19,15 @@ import type { Id } from '../../convex/_generated/dataModel';
 import Changelist, { type CardInfoMap } from './Changelist';
 import { Badge, Button, Card, CardBody, CardFooter, CardHeader } from './ui';
 
+export type BlogInfo = { id: string; title: string; body: string; date: number };
+
 export type Entry = {
   changelogId: string;
   date: number;
   cubeVersion?: number;
   changes: CompactChanges;
   counts: Counts;
+  blog?: BlogInfo;
 };
 
 export type Item = {
@@ -31,6 +35,7 @@ export type Item = {
   kind: 'entry' | 'squash';
   entries: Entry[];
   squashId?: Id<'squashes'>;
+  auto?: boolean;
   title?: string;
   changes: CompactChanges;
   counts: Counts;
@@ -65,6 +70,7 @@ export default function EntryCard({
   copied,
 }: Props) {
   const [showOriginals, setShowOriginals] = useState(false);
+  const [showPost, setShowPost] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.title ?? '');
 
@@ -72,6 +78,9 @@ export default function EntryCard({
   const last = item.entries[item.entries.length - 1];
   const isSquash = item.kind === 'squash';
   const { adds, removes, swaps, edits } = item.counts;
+  const blogEntry = [...item.entries].reverse().find((e) => e.blog);
+  const blog = blogEntry?.blog;
+  const blogUrl = blog ? `https://cubecobra.com/cube/blog/blogpost/${blog.id}` : undefined;
 
   const commitTitle = () => {
     setEditing(false);
@@ -135,23 +144,41 @@ export default function EntryCard({
                   }}
                   title="Rename"
                 >
-                  <span>{item.title || formatDateRange(first.date, last.date)}</span>
+                  <span>{item.title || blog?.title || formatDateRange(first.date, last.date)}</span>
                   <PencilIcon size={12} className="text-text-secondary opacity-0 group-hover:opacity-100" />
                 </button>
               )}
-              {item.title && (
+              {(item.title || blog?.title) && (
                 <span className="text-xs text-text-secondary">{formatDateRange(first.date, last.date)}</span>
               )}
             </div>
           ) : (
+            <div className="flex flex-wrap items-baseline gap-x-2 min-w-0">
+              {blog?.title && <span className="text-sm font-semibold">{blog.title}</span>}
+              <a
+                href={`https://cubecobra.com/cube/changelog/${cubeId}/${first.changelogId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={classNames(
+                  'font-semibold text-link hover:text-link-active',
+                  blog?.title ? 'text-xs' : 'text-sm',
+                )}
+                onClick={(e) => selecting && e.preventDefault()}
+              >
+                {formatDateTime(first.date)}
+              </a>
+            </div>
+          )}
+          {blogUrl && (
             <a
-              href={`https://cubecobra.com/cube/changelog/${cubeId}/${first.changelogId}`}
+              href={blogUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-link hover:text-link-active"
-              onClick={(e) => selecting && e.preventDefault()}
+              className="text-text-secondary hover:text-link shrink-0"
+              title="Open the blog post on Cube Cobra"
+              onClick={(e) => e.stopPropagation()}
             >
-              {formatDateTime(first.date)}
+              <BookIcon size={14} />
             </a>
           )}
         </div>
@@ -188,6 +215,20 @@ export default function EntryCard({
         </div>
       </CardHeader>
       <CardBody>
+        {blog?.body && (
+          <div className="mb-3">
+            <button
+              type="button"
+              className="flex items-center gap-1 text-xs font-semibold text-text-secondary hover:text-text"
+              onClick={() => setShowPost((s) => !s)}
+            >
+              <BookIcon size={12} /> {showPost ? 'Hide' : 'Show'} blog post
+            </button>
+            {showPost && (
+              <p className="mt-2 whitespace-pre-wrap rounded border border-border bg-bg p-3 text-sm">{blog.body}</p>
+            )}
+          </div>
+        )}
         <Changelist changes={item.changes} cards={cards} />
       </CardBody>
       {isSquash && (
@@ -212,6 +253,11 @@ export default function EntryCard({
                   >
                     {formatDateTime(e.date)} <LinkExternalIcon size={10} />
                   </a>
+                  {e.blog?.title && (
+                    <span className="font-semibold">
+                      <BookIcon size={10} /> {e.blog.title}
+                    </span>
+                  )}
                   <span className="text-text-secondary">
                     +{e.counts.adds + e.counts.swaps}, -{e.counts.removes + e.counts.swaps}
                     {e.counts.edits > 0 && (

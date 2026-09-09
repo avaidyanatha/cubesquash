@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { cardIdsIn, compactChanges, countChanges } from '../shared/changes';
 import { internal } from './_generated/api';
 import { action, internalMutation, internalQuery } from './_generated/server';
+import { runAutoSquash } from './squashes';
 
 const BASE = 'https://cubecobra.com';
 const PAGE_DELAY_MS = 150;
@@ -22,6 +23,38 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 type RawPost = { id: string; cubeId: string; date: number; changelog: unknown };
+type RawBlog = { id?: string; date?: number; title?: string; body?: string | null; changelist?: string };
+type BlogInfo = { id: string; title: string; body: string; date: number };
+const BLOG_BODY_LIMIT = 8000;
+const BLOG_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+
+async function fetchLinkedBlogs(cubeId: string, oldestNeeded: number): Promise<Map<string, BlogInfo>> {
+  const out = new Map<string, BlogInfo>();
+  let lastKey: unknown = null;
+  for (let page = 0; page < 200; page++) {
+    let res: { items?: RawBlog[]; lastKey?: unknown };
+    try {
+      res = await post(`/cube/blog/getmoreblogsbycube/${cubeId}`, { lastKey });
+    } catch {
+      break;
+    }
+    const items = res.items ?? [];
+    for (const b of items) {
+      if (!b.id || !b.changelist) continue;
+      out.set(b.changelist, {
+        id: b.id,
+        title: (b.title ?? '').trim(),
+        body: (b.body ?? '').slice(0, BLOG_BODY_LIMIT),
+        date: typeof b.date === 'number' ? b.date : 0,
+      });
+    }
+    const oldest = items.reduce((m, b) => Math.min(m, typeof b.date === 'number' ? b.date : m), Infinity);
+    lastKey = res.lastKey ?? null;
+    if (!lastKey || !items.length || oldest < oldestNeeded - BLOG_LOOKBACK_MS) break;
+    await sleep(PAGE_DELAY_MS);
+  }
+  return out;
+}
 
 export const knownChangelogIds = internalQuery({
   args: { cubeId: v.string() },
@@ -84,6 +117,7 @@ export const upsertEntries = internalMutation({
         cubeVersion: v.optional(v.number()),
         changes: v.any(),
         counts: v.object({ adds: v.number(), removes: v.number(), swaps: v.number(), edits: v.number() }),
+        blog: v.optional(v.object({ id: v.string(), title: v.string(), body: v.string(), date: v.number() })),
       }),
     ),
   },
@@ -197,6 +231,9 @@ export const syncCube = action({
       await sleep(PAGE_DELAY_MS);
     }
 
+    const oldestFresh = fresh.reduce((m, p) => Math.min(m, p.date), Infinity);
+    const blogs = fresh.length ? await fetchLinkedBlogs(cubeId, oldestFresh) : new Map<string, BlogInfo>();
+
     const compacted = fresh.map((p) => {
       const changes = compactChanges(p.changelog);
       const version = (p.changelog as { version?: unknown } | null)?.version;
@@ -207,6 +244,7 @@ export const syncCube = action({
         cubeVersion: typeof version === 'number' ? version : undefined,
         changes,
         counts: countChanges(changes),
+        blog: blogs.get(p.id),
       };
     });
 
@@ -258,6 +296,21 @@ export const syncCube = action({
       fullySynced: reachedEnd || stopAtKnown,
     });
 
+    await ctx.runMutation(internal.sync.autoSquashIfEnabled, { cubeId });
+
     return { cubeId, shortId, added: compacted.length };
+  },
+});
+
+export const autoSquashIfEnabled = internalMutation({
+  args: { cubeId: v.string() },
+  handler: async (ctx, { cubeId }) => {
+    const cube = await ctx.db
+      .query('cubes')
+      .withIndex('by_cubeId', (q) => q.eq('cubeId', cubeId))
+      .unique();
+    if (!cube || cube.autoSquash === false) return 0;
+    if (cube.autoSquash === undefined) await ctx.db.patch(cube._id, { autoSquash: true });
+    return await runAutoSquash(ctx, cubeId);
   },
 });
