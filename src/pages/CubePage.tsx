@@ -366,7 +366,7 @@ export default function CubePage() {
                     label="Auto-squash"
                     hint="Fold nearby entries into one update, anchored on blog posts"
                   />
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-3">
                     <select
                       value={autoWindow}
                       onChange={(e) => setAutoSquash(true, Number(e.target.value))}
