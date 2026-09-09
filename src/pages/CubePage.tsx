@@ -10,6 +10,7 @@ import { api } from '../../convex/_generated/api';
 import type { Doc } from '../../convex/_generated/dataModel';
 import type { CardInfoMap } from '../components/Changelist';
 import EntryCard, { type Entry, type Item } from '../components/EntryCard';
+import TimelineNav, { itemAnchorId } from '../components/TimelineNav';
 import { Button, Card, CardBody, Spinner, Toggle } from '../components/ui';
 import { formatDateRange, relativeTime } from '../lib/format';
 import { changesToMarkdown } from '../lib/markdown';
@@ -139,6 +140,34 @@ export default function CubePage() {
   const lastClick = useRef<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible.length === 0) return;
+    const cards = visible
+      .map((it) => document.getElementById(itemAnchorId(it.key)))
+      .filter((el): el is HTMLElement => !!el);
+    const pick = () => {
+      const line = 120;
+      let best: HTMLElement | null = null;
+      for (const el of cards) {
+        if (el.getBoundingClientRect().top <= line) best = el;
+        else break;
+      }
+      const el = best ?? cards[0];
+      const key = el?.dataset.key ?? null;
+      setActiveKey((prev) => (prev === key ? prev : key));
+    };
+    pick();
+    window.addEventListener('scroll', pick, { passive: true });
+    return () => window.removeEventListener('scroll', pick);
+  }, [visible]);
+
+  const navTitles = useMemo(() => new Map(visible.map((it) => [it.key, itemTitle(it)])), [visible]);
+  const navHasPost = useMemo(
+    () => new Set(visible.filter((it) => blogTitleOf(itemBlog(it))).map((it) => it.key)),
+    [visible],
+  );
 
   const exitSelect = () => {
     setSelecting(false);
@@ -295,7 +324,8 @@ export default function CubePage() {
         )}
       </div>
 
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 flex flex-col gap-4">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-8">
+      <div className="flex min-w-0 flex-col gap-4">
         {syncError && <p className="text-sm text-button-danger">{syncError}</p>}
 
         <Card>
@@ -435,7 +465,7 @@ export default function CubePage() {
         ) : (
           <ol className="relative ml-2 border-l-2 border-border pl-6 flex flex-col gap-4">
             {visible.map((item) => (
-              <li key={item.key} className="relative">
+              <li key={item.key} id={itemAnchorId(item.key)} data-key={item.key} className="relative">
                 <span
                   className={
                     item.kind === 'squash'
@@ -460,6 +490,14 @@ export default function CubePage() {
             ))}
           </ol>
         )}
+      </div>
+      {visible.length > 0 && (
+        <aside className="hidden lg:block">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto pr-1">
+            <TimelineNav items={visible} titles={navTitles} hasPost={navHasPost} activeKey={activeKey} />
+          </div>
+        </aside>
+      )}
       </div>
     </div>
   );
