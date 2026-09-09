@@ -71,7 +71,7 @@ export default function EntryCard({
   copied,
 }: Props) {
   const [showOriginals, setShowOriginals] = useState(false);
-  const [showPost, setShowPost] = useState(false);
+  const [showPost, setShowPost] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.title ?? '');
 
