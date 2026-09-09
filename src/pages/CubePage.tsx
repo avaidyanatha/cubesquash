@@ -165,15 +165,21 @@ export default function CubePage() {
     const range = items.slice(Math.min(...idxs), Math.max(...idxs) + 1);
     const entryIds = range.flatMap((it) => it.entries.map((e) => e.changelogId));
     const replaceIds = range.flatMap((it) => (it.squashId ? [it.squashId] : []));
+    const title = range.find((it) => it.title)?.title;
     const dates = range.flatMap((it) => it.entries.map((e) => e.date));
-    return { entryIds, replaceIds, from: Math.min(...dates), to: Math.max(...dates) };
+    return { entryIds, replaceIds, title, from: Math.min(...dates), to: Math.max(...dates) };
   }, [items, selected]);
 
   const doSquash = async () => {
     if (!cubeId || !squashRange || squashRange.entryIds.length < 2) return;
     setBusy(true);
     try {
-      await createSquash({ cubeId, entryIds: squashRange.entryIds, replaceIds: squashRange.replaceIds });
+      await createSquash({
+        cubeId,
+        entryIds: squashRange.entryIds,
+        replaceIds: squashRange.replaceIds,
+        title: squashRange.title,
+      });
       exitSelect();
     } finally {
       setBusy(false);
@@ -209,6 +215,7 @@ export default function CubePage() {
           cubeId,
           entryIds: g.flatMap((it) => it.entries.map((e) => e.changelogId)),
           replaceIds: g.flatMap((it) => (it.squashId ? [it.squashId] : [])),
+          title: g.find((it) => it.title)?.title,
         });
       }
     } finally {
