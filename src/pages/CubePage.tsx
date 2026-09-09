@@ -299,63 +299,79 @@ export default function CubePage() {
         {syncError && <p className="text-sm text-button-danger">{syncError}</p>}
 
         <Card>
-          <CardBody className="flex flex-wrap items-center gap-x-6 gap-y-3 py-3">
-            <Toggle
-              checked={hideEdits}
-              onChange={(v) => updateSettings({ cubeId: cube.cubeId, hideNonCardChanges: v })}
-              label="Hide non-card changes"
-              hint="Drop tag, status, finish, and printing edits"
-            />
-            <Toggle
-              checked={hideMaybeboard}
-              onChange={(v) => updateSettings({ cubeId: cube.cubeId, hideMaybeboard: v })}
-              label="Ignore maybeboard"
-              hint="Leave maybeboard changes out of the timeline"
-            />
-            <Toggle
-              checked={netOut}
-              onChange={(v) => updateSettings({ cubeId: cube.cubeId, netOut: v })}
-              label="Net out squashed changes"
-              hint="Cancel a card that was added and then cut inside the same squash"
-            />
-            <div className="ml-auto flex flex-wrap items-center gap-2">
+          <CardBody className="flex flex-col gap-3 py-3">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <span className="w-14 shrink-0 text-xs font-semibold uppercase tracking-wide text-text-secondary">View</span>
+              <Toggle
+                checked={hideEdits}
+                onChange={(v) => updateSettings({ cubeId: cube.cubeId, hideNonCardChanges: v })}
+                label="Hide non-card changes"
+                hint="Drop tag, status, finish, and printing edits"
+              />
+              <Toggle
+                checked={hideMaybeboard}
+                onChange={(v) => updateSettings({ cubeId: cube.cubeId, hideMaybeboard: v })}
+                label="Ignore maybeboard"
+                hint="Leave maybeboard changes out of the timeline"
+              />
+              <Toggle
+                checked={netOut}
+                onChange={(v) => updateSettings({ cubeId: cube.cubeId, netOut: v })}
+                label="Net out squashes"
+                hint="Cancel a card that was added and then cut inside the same squash"
+              />
+              <Button
+                color="secondary"
+                outline
+                disabled={visible.length === 0}
+                onClick={() => copy('__all__', visible.map((it) => itemMarkdown(it, cards)).join('\n\n'))}
+                title="Copy the whole visible timeline as Markdown"
+                className="ml-auto"
+              >
+                {copiedKey === '__all__' ? <CheckIcon size={14} /> : <CopyIcon size={14} />} Copy all
+              </Button>
+            </div>
+            <div className="border-t border-border" />
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <span className="w-14 shrink-0 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                Squash
+              </span>
               {selecting ? (
                 <>
                   <span className="text-sm text-text-secondary">
                     {selected.size === 0
                       ? 'Click entries to select. Shift-click for a range.'
                       : squashRange && squashRange.entryIds.length > 1
-                        ? `Squash ${squashRange.entryIds.length} entries · ${formatDateRange(squashRange.from, squashRange.to)}`
+                        ? `${squashRange.entryIds.length} entries · ${formatDateRange(squashRange.from, squashRange.to)}`
                         : 'Select at least two entries'}
                   </span>
-                  <Button
-                    color="primary"
-                    onClick={doSquash}
-                    disabled={busy || !squashRange || squashRange.entryIds.length < 2}
-                  >
-                    <FoldIcon size={14} /> Squash
-                  </Button>
-                  <Button color="secondary" outline onClick={exitSelect}>
-                    <XIcon size={14} /> Cancel
-                  </Button>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Button
+                      color="primary"
+                      onClick={doSquash}
+                      disabled={busy || !squashRange || squashRange.entryIds.length < 2}
+                    >
+                      <FoldIcon size={14} /> Squash selected
+                    </Button>
+                    <Button color="secondary" outline onClick={exitSelect}>
+                      <XIcon size={14} /> Cancel
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
-                  <Button color="accent" onClick={() => setSelecting(true)} disabled={visible.length < 2}>
-                    <ChecklistIcon size={14} /> Select to squash
-                  </Button>
-                  <div className="flex items-center gap-2">
-                    <Toggle
-                      checked={autoOn}
-                      onChange={(v) => setAutoSquash(v)}
-                      label="Auto-squash"
-                      hint="Fold nearby entries into one update, anchored on blog posts"
-                    />
+                  <Toggle
+                    checked={autoOn}
+                    onChange={(v) => setAutoSquash(v)}
+                    label="Auto-squash"
+                    hint="Fold nearby entries into one update, anchored on blog posts"
+                  />
+                  <div className="flex items-center gap-1">
                     <select
                       value={autoWindow}
                       onChange={(e) => setAutoSquash(true, Number(e.target.value))}
                       disabled={!autoOn || busy}
-                      className="rounded border border-border bg-bg text-text text-sm px-2 py-1 focus:outline-none disabled:opacity-50"
+                      className="rounded border border-border bg-bg text-text text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-focus-ring/50 disabled:opacity-50"
                       title="Entries closer together than this get folded"
                     >
                       {AUTO_WINDOWS.map((w) => (
@@ -364,45 +380,37 @@ export default function CubePage() {
                         </option>
                       ))}
                     </select>
-                    {autoOn && (
-                      <Button
-                        color="primary"
-                        outline
-                        onClick={() => setAutoSquash(true)}
-                        disabled={busy || items.length < 2}
-                        title="Run auto-squash again now"
-                      >
-                        <FoldIcon size={14} /> Run
-                      </Button>
-                    )}
-                  </div>
-                  {squashCount > 0 && (
                     <Button
-                      color="danger"
+                      color="secondary"
                       outline
-                      onClick={() => {
-                        if (confirm('Remove every squash for this cube and turn off auto-squash? The original entries are kept.')) {
-                          removeAllSquashes({ cubeId: cube.cubeId });
-                        }
-                      }}
+                      onClick={() => setAutoSquash(true)}
+                      disabled={!autoOn || busy || items.length < 2}
+                      title="Run auto-squash again now"
+                      className="px-1.5"
                     >
-                      Unsquash all
+                      <SyncIcon size={14} />
                     </Button>
-                  )}
-                  <Button
-                    color="secondary"
-                    outline
-                    disabled={visible.length === 0}
-                    onClick={() =>
-                      copy(
-                        '__all__',
-                        visible.map((it) => itemMarkdown(it, cards)).join('\n\n'),
-                      )
-                    }
-                    title="Copy the whole visible timeline as Markdown"
-                  >
-                    {copiedKey === '__all__' ? <CheckIcon size={14} /> : <CopyIcon size={14} />} Copy all
-                  </Button>
+                  </div>
+                  <div className="ml-auto flex items-center gap-3">
+                    {squashCount > 0 && (
+                      <button
+                        type="button"
+                        className="text-sm text-text-secondary hover:text-button-danger"
+                        onClick={() => {
+                          if (
+                            confirm('Remove every squash for this cube and turn off auto-squash? The original entries are kept.')
+                          ) {
+                            removeAllSquashes({ cubeId: cube.cubeId });
+                          }
+                        }}
+                      >
+                        Unsquash all
+                      </button>
+                    )}
+                    <Button color="accent" onClick={() => setSelecting(true)} disabled={visible.length < 2}>
+                      <ChecklistIcon size={14} /> Select to squash
+                    </Button>
+                  </div>
                 </>
               )}
             </div>
