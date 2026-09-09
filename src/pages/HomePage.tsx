@@ -86,7 +86,7 @@ export default function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {cubes.map((cube) => (
               <Card key={cube._id} className="overflow-hidden group">
-                <Link to={`/c/${cube.shortId}`} className="block">
+                <Link to={`/c/${cube.shortId || cube.cubeId}`} className="block">
                   <div className="relative h-32 bg-bg-secondary">
                     {cube.imageUri && (
                       <img

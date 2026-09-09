@@ -167,7 +167,7 @@ export const syncCube = action({
     const cube = meta.cube;
     if (!cube?.id) throw new Error(`Cube "${trimmed}" was not found on Cube Cobra (or it is private).`);
     const cubeId = cube.id;
-    const shortId = (cube.shortId ?? cubeId).toLowerCase();
+    const shortId = (cube.shortId || cubeId).toLowerCase();
 
     const state = await ctx.runQuery(internal.sync.cubeState, { cubeId });
     const known = new Set(await ctx.runQuery(internal.sync.knownChangelogIds, { cubeId }));
