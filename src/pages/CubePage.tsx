@@ -14,6 +14,7 @@ import { Link, useParams } from 'react-router-dom';
 import { cardIdsIn, type CompactChanges, countChanges } from '../../shared/changes';
 import { api } from '../../convex/_generated/api';
 import type { Doc } from '../../convex/_generated/dataModel';
+import type { CardInfoMap } from '../components/Changelist';
 import EntryCard, { type Entry, type Item } from '../components/EntryCard';
 import { Button, Card, CardBody, Spinner, Toggle } from '../components/ui';
 import { formatDateRange, relativeTime } from '../lib/format';
@@ -45,7 +46,12 @@ export default function CubePage() {
     for (const e of entries) for (const c of cardIdsIn(e.changes as CompactChanges)) set.add(c);
     return [...set];
   }, [entries]);
-  const cards = useQuery(api.cards.getMany, cardIds.length ? { ids: cardIds } : 'skip') ?? {};
+  const cardList = useQuery(api.cards.getMany, cardIds.length ? { ids: cardIds } : 'skip');
+  const cards = useMemo<CardInfoMap>(() => {
+    const map: CardInfoMap = {};
+    for (const c of cardList ?? []) map[c.cardID] = c;
+    return map;
+  }, [cardList]);
 
   const sync = useAction(api.sync.syncCube);
   const updateSettings = useMutation(api.cubes.updateSettings);
