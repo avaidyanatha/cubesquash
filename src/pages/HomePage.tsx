@@ -42,8 +42,7 @@ export default function HomePage() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold">Squash your Cube Cobra changelog</h1>
               <p className="mt-1 text-white/80 max-w-2xl">
-                Merge a pile of one-card updates into a single readable entry, and hide tag and printing
-                edits that bury the real changes.
+                Merge a pile of updates into a single readable entry, and hide tag and printing edits.
               </p>
             </div>
           </div>
