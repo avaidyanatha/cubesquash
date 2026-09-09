@@ -18,6 +18,7 @@ import type { CompactChanges, Counts } from '../../shared/changes';
 import { formatDateRange, formatDateTime } from '../lib/format';
 import type { Id } from '../../convex/_generated/dataModel';
 import Changelist, { type CardInfoMap } from './Changelist';
+import Markdown from './Markdown';
 import { Badge, Button, Card, CardBody, CardFooter, CardHeader } from './ui';
 
 export type BlogInfo = { id: string; title: string; body: string; date: number };
@@ -227,7 +228,9 @@ export default function EntryCard({
               <BookIcon size={12} /> {showPost ? 'Hide' : 'Show'} blog post
             </button>
             {showPost && (
-              <p className="mt-2 whitespace-pre-wrap rounded border border-border bg-bg p-3 text-sm">{blog.body}</p>
+              <div className="mt-2 rounded border border-border bg-bg p-3">
+                <Markdown markdown={blog.body} />
+              </div>
             )}
           </div>
         )}
