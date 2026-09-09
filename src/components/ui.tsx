@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import type React from 'react';
 import type { ReactNode } from 'react';
 
 export type ButtonColor = 'primary' | 'danger' | 'accent' | 'secondary';
@@ -65,8 +66,24 @@ export function Button({
   );
 }
 
-export const Card = ({ className, children }: { className?: string; children: ReactNode }) => (
-  <div className={classNames('bg-bg-accent/80 shadow rounded-md border border-border', className)}>{children}</div>
+export const Card = ({
+  className,
+  children,
+  onClick,
+  onMouseDown,
+}: {
+  className?: string;
+  children: ReactNode;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+}) => (
+  <div
+    className={classNames('bg-bg-accent/80 shadow rounded-md border border-border', className)}
+    onClick={onClick}
+    onMouseDown={onMouseDown}
+  >
+    {children}
+  </div>
 );
 
 export const CardHeader = ({ className, children }: { className?: string; children: ReactNode }) => (

@@ -82,17 +82,18 @@ export default function EntryCard({
     <Card
       className={classNames('transition-shadow', {
         'ring-2 ring-button-accent border-button-accent': selected,
-        'cursor-pointer hover:shadow-md': selecting,
+        'cursor-pointer hover:shadow-md select-none': selecting,
         'border-l-4 border-l-button-primary': isSquash,
       })}
+      onClick={(e) => {
+        if (selecting) onToggleSelect(e.shiftKey);
+      }}
+      onMouseDown={(e) => {
+        if (selecting && e.shiftKey) e.preventDefault();
+      }}
     >
       <CardHeader className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <div
-          className="flex items-center gap-2 min-w-0"
-          onClick={(e) => {
-            if (selecting) onToggleSelect(e.shiftKey);
-          }}
-        >
+        <div className="flex items-center gap-2 min-w-0">
           {selecting && (
             <span
               className={classNames(
@@ -154,7 +155,7 @@ export default function EntryCard({
             </a>
           )}
         </div>
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
           <span className="text-xs font-semibold text-text-secondary whitespace-nowrap">
             <span className="text-change-add">+{adds + swaps}</span>, <span className="text-change-remove">-{removes + swaps}</span>
             {edits > 0 && (
