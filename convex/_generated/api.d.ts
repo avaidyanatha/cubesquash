@@ -11,6 +11,7 @@
 import type * as cards from "../cards.js";
 import type * as cubes from "../cubes.js";
 import type * as entries from "../entries.js";
+import type * as http from "../http.js";
 import type * as squashes from "../squashes.js";
 import type * as sync from "../sync.js";
 
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   cards: typeof cards;
   cubes: typeof cubes;
   entries: typeof entries;
+  http: typeof http;
   squashes: typeof squashes;
   sync: typeof sync;
 }>;
@@ -54,4 +56,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
+};

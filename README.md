@@ -24,9 +24,25 @@ The first `convex dev` run offers to start a local anonymous backend (no Convex 
 
 Run the merge logic tests with `npm test`.
 
-## Self-hosting
+## Hosting on Convex cloud (recommended)
 
-The stack is the Convex backend and dashboard from the [official self-hosted images](https://github.com/get-convex/convex-backend/tree/main/self-hosted), plus the static frontend served by nginx.
+The frontend is served by the [static-hosting component](https://github.com/get-convex/static-hosting) from the same Convex deployment that runs the backend, so one `deploy` ships both. This is how abhivaidyanatha.com and svixtape.com are hosted.
+
+```sh
+npx convex login
+npx convex dev --configure new   # create the project, pick the team
+npm run deploy                    # pushes functions and uploads the built site
+```
+
+`npm run deploy` runs `convex deploy`, then `static-hosting deploy --skip-convex`, which builds with the production `VITE_CONVEX_URL` and uploads `dist/`. Never upload a plain `npm run build` output: it bakes the dev URL from `.env.local` into the bundle.
+
+To serve it on a subdomain, add the hostname as a custom domain on the production deployment in the Convex dashboard (Settings, Custom Domains), then add a CNAME for it pointing at `convex.domains` in your DNS.
+
+The GitHub Actions workflow in `.github/workflows/deploy.yml` deploys on every push to `main`. It needs a `CONVEX_DEPLOY_KEY` repository secret, generated from the production deployment's settings page.
+
+## Self-hosting with Docker
+
+If you would rather run the backend yourself, the stack is the Convex backend and dashboard from the [official self-hosted images](https://github.com/get-convex/convex-backend/tree/main/self-hosted), plus the static frontend served by nginx.
 
 1. Copy `.env.example` to `.env.local`.
 2. Start the backend and dashboard, then generate an admin key:
@@ -53,7 +69,7 @@ The stack is the Convex backend and dashboard from the [official self-hosted ima
    VITE_CONVEX_URL=https://convex.example.com docker compose up -d --build web
    ```
 
-The web app listens on port 8080 by default (`WEB_PORT`). The Convex dashboard is on 6791. State lives in the `data` Docker volume as SQLite; point `POSTGRES_URL` at a database if you want something sturdier.
+The web app listens on port 8080 by default (`WEB_PORT`). The Convex dashboard is on 6791. State lives in the `data` Docker volume as SQLite; point `POSTGRES_URL` at a database if you want something sturdier. The static-hosting component also works on a self-hosted backend, so you can skip the nginx container and serve the site from port 3211 instead.
 
 There is no auth. Anyone who can reach the site can create and remove squashes, so keep it behind your own proxy or VPN if that matters.
 
