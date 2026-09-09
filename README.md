@@ -1,5 +1,7 @@
 # Cube Squash
 
+Live at [cubesquash.com](https://cubesquash.com).
+
 A self-hosted viewer for your [Cube Cobra](https://cubecobra.com) changelog that lets you squash a run of small changelog entries into one readable update and hide non-card changes (tag, status, finish, and printing edits).
 
 Cube Cobra has no API for editing or deleting changelog entries, so this tool never touches your cube. It mirrors the public history, stores your squash groups in Convex, and renders a cleaned-up timeline. Every entry still links back to the original changelog and the point-in-time list on Cube Cobra.
@@ -36,7 +38,7 @@ npm run deploy                    # pushes functions and uploads the built site
 
 `npm run deploy` runs `convex deploy`, then `static-hosting deploy --skip-convex`, which builds with the production `VITE_CONVEX_URL` and uploads `dist/`. Never upload a plain `npm run build` output: it bakes the dev URL from `.env.local` into the bundle.
 
-To serve it on a subdomain, add the hostname as a custom domain on the production deployment in the Convex dashboard (Settings, Custom Domains), then add a CNAME for it pointing at `convex.domains` in your DNS.
+To serve it on your own domain, add the hostname as a custom domain on the production deployment in the Convex dashboard (Settings, Custom Domains), then add a CNAME for it pointing at `convex.domains` in your DNS. cubesquash.com does this from Cloudflare with CNAME records for `@` (flattened) and `www`, both DNS-only.
 
 The GitHub Actions workflow in `.github/workflows/deploy.yml` deploys on every push to `main`. It needs a `CONVEX_DEPLOY_KEY` repository secret, generated from the production deployment's settings page.
 
