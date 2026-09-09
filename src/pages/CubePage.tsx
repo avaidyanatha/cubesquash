@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { DEFAULT_AUTO_WINDOW_MS } from '../../shared/autosquash';
+import { blogTitleOf } from '../../shared/blog';
 import { cardIdsIn, type CompactChanges, countChanges } from '../../shared/changes';
 import { api } from '../../convex/_generated/api';
 import type { Doc } from '../../convex/_generated/dataModel';
@@ -26,7 +27,7 @@ const itemBlog = (item: Item) => [...item.entries].reverse().find((e) => e.blog)
 const itemTitle = (item: Item): string => {
   const first = item.entries[0];
   const last = item.entries[item.entries.length - 1];
-  return item.title || itemBlog(item)?.title || formatDateRange(first.date, last.date);
+  return item.title || blogTitleOf(itemBlog(item)) || formatDateRange(first.date, last.date);
 };
 
 const itemMarkdown = (item: Item, cards: CardInfoMap) =>
@@ -83,7 +84,7 @@ export default function CubePage() {
   }, [cube, runSync]);
 
   const hideEdits = cube?.hideNonCardChanges ?? true;
-  const netOut = cube?.netOut ?? false;
+  const netOut = cube?.netOut ?? true;
   const autoOn = cube?.autoSquash ?? true;
   const autoWindow = cube?.autoSquashWindowMs ?? DEFAULT_AUTO_WINDOW_MS;
 

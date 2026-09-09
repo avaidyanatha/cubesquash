@@ -13,6 +13,7 @@ import {
 import classNames from 'classnames';
 import { useState } from 'react';
 
+import { blogTitleOf } from '../../shared/blog';
 import type { CompactChanges, Counts } from '../../shared/changes';
 import { formatDateRange, formatDateTime } from '../lib/format';
 import type { Id } from '../../convex/_generated/dataModel';
@@ -80,6 +81,7 @@ export default function EntryCard({
   const { adds, removes, swaps, edits } = item.counts;
   const blogEntry = [...item.entries].reverse().find((e) => e.blog);
   const blog = blogEntry?.blog;
+  const blogTitle = blogTitleOf(blog);
   const blogUrl = blog ? `https://cubecobra.com/cube/blog/blogpost/${blog.id}` : undefined;
 
   const commitTitle = () => {
@@ -144,24 +146,24 @@ export default function EntryCard({
                   }}
                   title="Rename"
                 >
-                  <span>{item.title || blog?.title || formatDateRange(first.date, last.date)}</span>
+                  <span>{item.title || blogTitle || formatDateRange(first.date, last.date)}</span>
                   <PencilIcon size={12} className="text-text-secondary opacity-0 group-hover:opacity-100" />
                 </button>
               )}
-              {(item.title || blog?.title) && (
+              {(item.title || blogTitle) && (
                 <span className="text-xs text-text-secondary">{formatDateRange(first.date, last.date)}</span>
               )}
             </div>
           ) : (
             <div className="flex flex-wrap items-baseline gap-x-2 min-w-0">
-              {blog?.title && <span className="text-sm font-semibold">{blog.title}</span>}
+              {blogTitle && <span className="text-sm font-semibold">{blogTitle}</span>}
               <a
                 href={`https://cubecobra.com/cube/changelog/${cubeId}/${first.changelogId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={classNames(
                   'font-semibold text-link hover:text-link-active',
-                  blog?.title ? 'text-xs' : 'text-sm',
+                  blogTitle ? 'text-xs' : 'text-sm',
                 )}
                 onClick={(e) => selecting && e.preventDefault()}
               >
@@ -253,9 +255,9 @@ export default function EntryCard({
                   >
                     {formatDateTime(e.date)} <LinkExternalIcon size={10} />
                   </a>
-                  {e.blog?.title && (
+                  {blogTitleOf(e.blog) && (
                     <span className="font-semibold">
-                      <BookIcon size={10} /> {e.blog.title}
+                      <BookIcon size={10} /> {blogTitleOf(e.blog)}
                     </span>
                   )}
                   <span className="text-text-secondary">

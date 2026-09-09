@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 
 import { DEFAULT_AUTO_WINDOW_MS, planAutoSquash } from '../shared/autosquash';
+import { blogTitleOf, isAutomaticPost } from '../shared/blog';
 import { mutation, query } from './_generated/server';
 import type { MutationCtx } from './_generated/server';
 
@@ -92,8 +93,13 @@ export async function runAutoSquash(ctx: MutationCtx, cubeId: string, windowMs?:
     .withIndex('by_cube', (q) => q.eq('cubeId', cubeId))
     .collect();
   const plans = planAutoSquash(
-    entries.map((e) => ({ id: e.changelogId, date: e.date, blogTitle: e.blog?.title })),
-    squashes.map((s) => ({ id: s._id, entryIds: s.entryIds, auto: s.auto ?? false, title: s.title })),
+    entries.map((e) => ({ id: e.changelogId, date: e.date, blogTitle: blogTitleOf(e.blog) })),
+    squashes.map((s) => ({
+      id: s._id,
+      entryIds: s.entryIds,
+      auto: s.auto ?? false,
+      title: s.auto && isAutomaticPost({ title: s.title, body: '' }) ? undefined : s.title,
+    })),
     new Set(cube.noAutoSquash ?? []),
     window,
   );
