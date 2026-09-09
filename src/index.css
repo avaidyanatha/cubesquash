@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: 240 240 240;
+  --bg-active: 233 233 233;
+  --bg-secondary: 52 58 64;
+  --bg-accent: 250 250 250;
+  --text-secondary: 128 128 128;
+  --text-secondary-active: 255 255 255;
+  --border: 212 212 212;
+  --border-active: 180 180 180;
+  --border-secondary: 187 187 187;
+  --text: 33 37 41;
+  --link: 0 123 255;
+  --link-active: 0 86 179;
+  --button-text: 255 255 255;
+  --button-primary: 8 119 21;
+  --button-primary-active: 0 75 13;
+  --button-danger: 188 21 37;
+  --button-danger-active: 139 0 0;
+  --button-accent: 0 123 255;
+  --button-accent-active: 0 86 179;
+  --button-secondary: 108 117 125;
+  --button-secondary-active: 74 80 87;
+  --focus-ring: 3 102 214;
+  --hero-bg: 8 119 21;
+  --tag-badge-bg: 108 117 125;
+  --tag-badge-text: 255 255 255;
+  --change-add: 8 119 21;
+  --change-remove: 188 21 37;
+  --change-swap: 0 123 255;
+  --change-edit: 217 119 6;
+}
+
+.dark {
+  --bg: 52 58 64;
+  --bg-active: 74 80 87;
+  --bg-accent: 63 69 76;
+  --bg-secondary: 36 41 46;
+  --text-secondary: 160 168 176;
+  --text-secondary-active: 255 255 255;
+  --border: 45 51 56;
+  --border-active: 17 12 16;
+  --border-secondary: 109 120 130;
+  --text: 240 240 240;
+  --link: 50 166 255;
+  --link-active: 120 200 255;
+  --button-text: 255 255 255;
+  --button-primary: 40 167 67;
+  --button-primary-active: 51 127 68;
+  --button-danger: 220 53 69;
+  --button-danger-active: 139 0 0;
+  --button-accent: 13 110 253;
+  --button-accent-active: 11 94 215;
+  --button-secondary: 108 117 125;
+  --button-secondary-active: 74 80 87;
+  --focus-ring: 3 102 214;
+  --hero-bg: 73 95 52;
+  --tag-badge-bg: 149 165 166;
+  --tag-badge-text: 33 37 41;
+  --change-add: 76 201 106;
+  --change-remove: 255 107 120;
+  --change-swap: 96 180 255;
+  --change-edit: 251 191 36;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: rgb(var(--bg));
+  --color-bg-active: rgb(var(--bg-active));
+  --color-bg-secondary: rgb(var(--bg-secondary));
+  --color-bg-accent: rgb(var(--bg-accent));
+  --color-text: rgb(var(--text));
+  --color-text-secondary: rgb(var(--text-secondary));
+  --color-text-secondary-active: rgb(var(--text-secondary-active));
+  --color-border: rgb(var(--border));
+  --color-border-active: rgb(var(--border-active));
+  --color-border-secondary: rgb(var(--border-secondary));
+  --color-link: rgb(var(--link));
+  --color-link-active: rgb(var(--link-active));
+  --color-button-text: rgb(var(--button-text));
+  --color-button-primary: rgb(var(--button-primary));
+  --color-button-primary-active: rgb(var(--button-primary-active));
+  --color-button-danger: rgb(var(--button-danger));
+  --color-button-danger-active: rgb(var(--button-danger-active));
+  --color-button-accent: rgb(var(--button-accent));
+  --color-button-accent-active: rgb(var(--button-accent-active));
+  --color-button-secondary: rgb(var(--button-secondary));
+  --color-button-secondary-active: rgb(var(--button-secondary-active));
+  --color-focus-ring: rgb(var(--focus-ring));
+  --color-hero-bg: rgb(var(--hero-bg));
+  --color-tag-badge-bg: rgb(var(--tag-badge-bg));
+  --color-tag-badge-text: rgb(var(--tag-badge-text));
+  --color-change-add: rgb(var(--change-add));
+  --color-change-remove: rgb(var(--change-remove));
+  --color-change-swap: rgb(var(--change-swap));
+  --color-change-edit: rgb(var(--change-edit));
+  --font-mono: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  @apply bg-bg text-text antialiased;
+}
+
+svg {
+  display: inline;
+}
