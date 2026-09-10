@@ -54,20 +54,34 @@ function mergeBoardNet(boards: CompactBoard[], hideEdits: boolean): CompactBoard
     if (!sameCard(from, pair.to)) edits.set(pair.to.cardID, { from, to: pair.to });
   };
 
+  const swapPairs: CardPair[] = [];
   for (const b of boards) {
     for (const p of b.swaps) {
       remove(p.from);
       add(p.to);
+      swapPairs.push(p);
     }
     for (const c of b.removes) remove(c);
     for (const c of b.adds) add(c);
     for (const p of b.edits) edit(p);
   }
 
+  // A swap whose both sides survived netting is still a swap; keep the arrow.
+  const swaps: CardPair[] = [];
+  for (const p of swapPairs) {
+    const from = removed.get(p.from.cardID);
+    const to = added.get(p.to.cardID);
+    if (from && to) {
+      removed.delete(p.from.cardID);
+      added.delete(p.to.cardID);
+      swaps.push({ from, to });
+    }
+  }
+
   return {
     adds: [...added.values()],
     removes: [...removed.values()],
-    swaps: [],
+    swaps,
     edits: hideEdits ? [] : [...edits.values()],
   };
 }

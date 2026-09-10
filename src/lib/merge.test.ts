@@ -36,12 +36,23 @@ describe('mergeChanges', () => {
     expect(merged).toEqual({});
   });
 
-  it('expands swaps into add and remove when netting', () => {
+  it('keeps a swap as a swap when neither side is cancelled', () => {
     const merged = mergeChanges([entry({ swaps: [{ from: card('old'), to: card('new') }] })], {
       netOut: true,
       hideEdits: false,
     });
-    expect(merged.mainboard.adds.map((c) => c.cardID)).toEqual(['new']);
+    expect(merged.mainboard.swaps).toEqual([{ from: card('old'), to: card('new') }]);
+    expect(merged.mainboard.adds).toHaveLength(0);
+    expect(merged.mainboard.removes).toHaveLength(0);
+  });
+
+  it('breaks a swap apart when a later entry cancels one side', () => {
+    const merged = mergeChanges(
+      [entry({ swaps: [{ from: card('old'), to: card('new') }] }), entry({ removes: [card('new')] })],
+      { netOut: true, hideEdits: false },
+    );
+    expect(merged.mainboard.swaps).toHaveLength(0);
+    expect(merged.mainboard.adds).toHaveLength(0);
     expect(merged.mainboard.removes.map((c) => c.cardID)).toEqual(['old']);
   });
 
