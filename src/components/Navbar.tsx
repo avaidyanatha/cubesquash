@@ -15,7 +15,7 @@ export default function Navbar() {
         <Link to="/" className="shrink-0" title="Cube Squash">
           <Logo markSize={38} />
         </Link>
-        <nav className="flex items-center gap-1">
+        <nav aria-label="Site" className="flex items-center gap-1">
           <a href="https://cubecobra.com" target="_blank" rel="noopener noreferrer" className={NAV_ITEM}>
             <span className="hidden sm:inline">Cube Cobra</span>
             <LinkExternalIcon size={16} />

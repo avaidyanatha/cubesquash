@@ -1,5 +1,11 @@
 {
   "name": "cubesquash",
+  "description": "Tidy up your Cube Cobra changelog: merge runs of small updates into one entry and hide tag and printing edits.",
+  "homepage": "https://cubesquash.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avaidyanatha/cubesquash.git"
+  },
   "private": true,
   "version": "0.0.0",
   "type": "module",

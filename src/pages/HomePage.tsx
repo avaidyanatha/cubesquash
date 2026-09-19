@@ -6,9 +6,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../convex/_generated/api';
 import { SquashMark } from '../components/Logo';
 import { Button, Card, CardBody, Spinner } from '../components/ui';
+import { useHead } from '../hooks/useHead';
 import { parseCubeInput, relativeTime } from '../lib/format';
 
 export default function HomePage() {
+  useHead();
   const navigate = useNavigate();
   const cubes = useQuery(api.cubes.list);
   const sync = useAction(api.sync.syncCube);
