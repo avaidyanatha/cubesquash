@@ -1,9 +1,10 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import CubePage from './pages/CubePage';
 import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/c/:id" element={<CubePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </ErrorBoundary>
       </main>

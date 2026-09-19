@@ -12,6 +12,7 @@ import type { CardInfoMap } from '../components/Changelist';
 import EntryCard, { type Entry, type Item } from '../components/EntryCard';
 import TimelineNav, { itemAnchorId } from '../components/TimelineNav';
 import { Button, Card, CardBody, Spinner, Toggle } from '../components/ui';
+import { useHead } from '../hooks/useHead';
 import { formatDateRange, relativeTime } from '../lib/format';
 import { changesToMarkdown } from '../lib/markdown';
 import { mergeChanges } from '../lib/merge';
@@ -34,9 +35,25 @@ const itemTitle = (item: Item): string => {
 const itemMarkdown = (item: Item, cards: CardInfoMap) =>
   changesToMarkdown(itemTitle(item), item.changes, cards, itemBlog(item)?.body);
 
+const cubeDescription = (cube: Doc<'cubes'>): string => {
+  const owner = cube.ownerName ? ` by ${cube.ownerName}` : '';
+  const size = cube.cardCount !== undefined ? `${cube.cardCount}-card ` : '';
+  return `${cube.name}${owner}: a ${size}Cube Cobra cube with ${cube.entryCount} changelog entries, squashed into readable updates with tag and printing edits hidden.`;
+};
+
 export default function CubePage() {
   const { id = '' } = useParams();
   const cube = useQuery(api.cubes.get, { id });
+  useHead(
+    cube
+      ? {
+          title: `${cube.name} changelog`,
+          description: cubeDescription(cube),
+          path: `/c/${cube.shortId || cube.cubeId}`,
+          image: cube.imageUri,
+        }
+      : { path: `/c/${id}`, noindex: cube === null },
+  );
   const cubeId = cube?.cubeId;
   const entries = useQuery(api.entries.byCube, cubeId ? { cubeId } : 'skip') as Entry[] | undefined;
   const squashes = useQuery(api.squashes.byCube, cubeId ? { cubeId } : 'skip');

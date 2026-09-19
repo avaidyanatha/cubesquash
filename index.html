@@ -2,15 +2,65 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Squash and tidy your Cube Cobra changelog history." />
+    <title>Cube Squash: tidy up your Cube Cobra changelog</title>
+    <meta
+      name="description"
+      content="Paste a Cube Cobra cube to get a cleaner changelog. Merge runs of small updates into one entry, hide tag and printing edits, and copy the result as Markdown."
+    />
+    <link rel="canonical" href="https://cubesquash.com/" />
+    <meta name="author" content="Abhi Vaidyanatha" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#343a40" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#24292e" media="(prefers-color-scheme: dark)" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cube Squash" />
+    <meta property="og:title" content="Cube Squash: tidy up your Cube Cobra changelog" />
+    <meta
+      property="og:description"
+      content="Paste a Cube Cobra cube to get a cleaner changelog. Merge runs of small updates into one entry, hide tag and printing edits, and copy the result as Markdown."
+    />
+    <meta property="og:url" content="https://cubesquash.com/" />
+    <meta property="og:image" content="https://cubesquash.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Cube Squash logo, a white squash on a green hexagon, with the tagline: tidy up your Cube Cobra changelog" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cube Squash: tidy up your Cube Cobra changelog" />
+    <meta
+      name="twitter:description"
+      content="Paste a Cube Cobra cube to get a cleaner changelog. Merge runs of small updates into one entry, hide tag and printing edits, and copy the result as Markdown."
+    />
+    <meta name="twitter:image" content="https://cubesquash.com/og.png" />
+
     <link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" />
     <link href="https://code.cdn.mozilla.net/fonts/fira.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;800&display=swap" rel="stylesheet" />
-    <title>Cube Squash</title>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Cube Squash",
+        "url": "https://cubesquash.com/",
+        "description": "Paste a Cube Cobra cube to get a cleaner changelog. Merge runs of small updates into one entry, hide tag and printing edits, and copy the result as Markdown.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "image": "https://cubesquash.com/og.png",
+        "author": { "@type": "Person", "name": "Abhi Vaidyanatha", "url": "https://abhivaidyanatha.com" },
+        "sameAs": ["https://github.com/avaidyanatha/cubesquash"]
+      }
+    </script>
     <script>
       try {
         var t = localStorage.getItem('theme');
@@ -20,6 +70,9 @@
     </script>
   </head>
   <body>
+    <noscript>
+      <p>Cube Squash needs JavaScript. It reads a public Cube Cobra changelog and shows a squashed version with runs of small updates merged into one entry.</p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
